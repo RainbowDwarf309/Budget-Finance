@@ -3,17 +3,20 @@ import logging
 import sys
 from os import getenv
 from dotenv import load_dotenv
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import Command
 import exceptions
 import expenses
 from categories import Categories
+from middlewares import AccessMiddleware
 
 load_dotenv()
 
 TOKEN = getenv("TELEGRAM_API_TOKEN")
+ACCESS_ID = getenv("TELEGRAM_ACCESS_ID")
 dp = Dispatcher()
+dp.message.middleware.register(AccessMiddleware(ACCESS_ID.split(',')))
 
 
 @dp.message(Command('start', 'help'))
