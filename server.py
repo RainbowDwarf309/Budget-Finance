@@ -19,9 +19,11 @@ ACCESS_ID = getenv("TELEGRAM_ACCESS_ID")
 dp = Dispatcher()
 dp.message.middleware.register(AccessMiddleware(ACCESS_ID.split(',')))
 DEBUG = getenv("DEBUG")
-if DEBUG:
+if DEBUG == 'True':
+    print(DEBUG)
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
 else:
+    print(DEBUG)
     session = AiohttpSession(proxy=getenv("PROXY_URL"))
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML, session=session)
 
