@@ -51,11 +51,11 @@ async def del_expense(message: types.Message):
 async def categories_list(message: types.Message):
     """Отправляет список категорий расходов"""
     categories = Categories().get_all_categories()
-    answer_message = "Категории трат:\n\n* " + \
-                     "Базовые расходы:\n" + \
+    answer_message = "Категории трат:\n\n" + \
+                     "Базовые расходы:\n*" + \
                      ("\n* ".join(
                          [c.name + ' (' + ", ".join(c.aliases) + ')' for c in categories if c.is_base_expense])) + \
-                     "Второстепенные расходы:\n" + \
+                     "\n\nВторостепенные расходы:\n*" + \
                      ("\n* ".join(
                          [c.name + ' (' + ", ".join(c.aliases) + ')' for c in categories if not c.is_base_expense]))
     await message.answer(answer_message)
