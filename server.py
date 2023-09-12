@@ -12,15 +12,18 @@ from categories import Categories
 from middlewares import AccessMiddleware
 from aiogram.client.session.aiohttp import AiohttpSession
 
-
 load_dotenv()
 
 TOKEN = getenv("TELEGRAM_API_TOKEN")
 ACCESS_ID = getenv("TELEGRAM_ACCESS_ID")
 dp = Dispatcher()
 dp.message.middleware.register(AccessMiddleware(ACCESS_ID.split(',')))
-session = AiohttpSession(proxy=getenv("PROXY_URL"))
-bot = Bot(TOKEN, parse_mode=ParseMode.HTML, session=session)
+DEBUG = getenv("DEBUG")
+if DEBUG:
+    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+else:
+    session = AiohttpSession(proxy=getenv("PROXY_URL"))
+    bot = Bot(TOKEN, parse_mode=ParseMode.HTML, session=session)
 
 
 @dp.message(Command('start', 'help'))
@@ -49,7 +52,12 @@ async def categories_list(message: types.Message):
     """Отправляет список категорий расходов"""
     categories = Categories().get_all_categories()
     answer_message = "Категории трат:\n\n* " + \
-                     ("\n* ".join([c.name + ' (' + ", ".join(c.aliases) + ')' for c in categories]))
+                     "Базовые расходы:\n" + \
+                     ("\n* ".join(
+                         [c.name + ' (' + ", ".join(c.aliases) + ')' for c in categories if c.is_base_expense])) + \
+                     "Второстепенные расходы:\n" + \
+                     ("\n* ".join(
+                         [c.name + ' (' + ", ".join(c.aliases) + ')' for c in categories if not c.is_base_expense]))
     await message.answer(answer_message)
 
 
