@@ -34,8 +34,10 @@ async def send_welcome(message: types.Message):
         "Добавить расход: добавить 250 такси\n"
         "Сегодняшняя статистика: /today\n"
         "За текущий месяц: /month\n"
+        "За текущий год: /year\n"
         "Последние внесённые расходы: /expenses\n"
-        "Категории трат: /categories")
+        "Категории трат: /categories\n"
+        "Изменить величину базового расхода: изменить базовый расход 2000")
 
 
 @dp.message(lambda message: message.text.startswith('/del'))
@@ -75,6 +77,13 @@ async def month_statistics(message: types.Message):
     await message.answer(answer_message)
 
 
+@dp.message(Command('year'))
+async def year_statistics(message: types.Message):
+    """Отправляет статистику трат текущего года"""
+    answer_message = expenses.get_year_statistics()
+    await message.answer(answer_message)
+
+
 @dp.message(Command('expenses'))
 async def list_expenses(message: types.Message):
     """Отправляет последние несколько записей о расходах"""
@@ -105,6 +114,17 @@ async def add_expense(message: types.Message):
         f"Удалить последнюю трату {expenses.last()[0].amount} руб на {expenses.last()[0].category_name}: "
         f"/del{expenses.last()[0].id}.\n\n"
         f"{expenses.get_today_statistics()}")
+    await message.answer(answer_message)
+
+
+@dp.message(lambda message: message.text.startswith(('изменить базовый расход')))
+async def change_base(message: types.Message):
+    """Изменяет базовый расход"""
+    try:
+        answer_message = expenses.change_base(int(message.text[23:]))
+    except exceptions.NotCorrectMessage as e:
+        await message.answer(str(e))
+        return
     await message.answer(answer_message)
 
 
