@@ -84,6 +84,37 @@ def get_month_statistics() -> str:
             f"{now.day * _get_budget_limit()} руб.")
 
 
+def get_year_statistics() -> str:
+    """Возвращает строкой статистику расходов за текущий год"""
+    now = _get_now_datetime()
+    first_day_of_year = f'{now.year:04d}-01-01'
+    cursor = db.get_cursor()
+    cursor.execute(f"select sum(amount) "
+                   f"from expense where date(created) >= '{first_day_of_year}'")
+    result = cursor.fetchone()
+    if not result[0]:
+        return "В этом году ещё нет расходов"
+    all_today_expenses = result[0]
+    cursor.execute(f"select sum(amount) "
+                   f"from expense where date(created) >= '{first_day_of_year}' "
+                   f"and category_codename in (select codename "
+                   f"from category where is_base_expense=true)")
+    result = cursor.fetchone()
+    base_today_expenses = result[0] if result[0] else 0
+    return (f"Расходы в текущем году:\n"
+            f"всего — {all_today_expenses} руб.\n"
+            f"базовые — {base_today_expenses} руб. из "
+            f"{(now.day * _get_budget_limit()) + ((now.month - 1) * 30 * _get_budget_limit())} руб.")
+
+
+def change_base(value: int):
+    db.change_base_expense(value)
+    cursor = db.get_cursor()
+    cursor.execute("select daily_limit from budget")
+    base = cursor.fetchone()
+    return (f"Базовый расход изменен и составляет {base[0]} руб.")
+
+
 def last_10() -> List[Expense]:
     """Возвращает последние несколько расходов"""
     cursor = db.get_cursor()

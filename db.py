@@ -42,6 +42,11 @@ def get_cursor():
     return cursor
 
 
+def change_base_expense(value: int) -> None:
+    cursor.execute(f"update budget set daily_limit={value} where codename='base'")
+    conn.commit()
+
+
 def _init_db():
     """Инициализирует БД"""
     with open("db/createdb.sql", "r") as f:
