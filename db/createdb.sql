@@ -24,13 +24,21 @@ values
     ("products", "продукты", true, "еда"),
     ("coffee", "кофе", true, ""),
     ("dinner", "обед", true, "столовая, ланч, бизнес-ланч, бизнес ланч"),
-    ("cafe", "кафе", true, "ресторан, рест, мак, макдональдс, макдак, kfc, ilpatio, il patio"),
-    ("transport", "общ. транспорт", false, "метро, автобус, metro"),
+    ("transport", "общ. транспорт", true, "метро, автобус, metro"),
+    ("phone", "телефон", true, "yota, связь"),
+    ("internet", "интернет", true, "инет, inet"),
+    ("subscriptions", "подписки", true, "подписка"),
+    ("housewares", "хоз. товары", true, "уборка, мытье, стирка"),
+    ("cosmetics", "косметика", true, "уход, гигиена, ногти, лазер"),
+    ("pharmacy", "аптека", true, "лекарства , витамины"),
+    ("apartment", "квартира", true, "коммуналка, аренда"),
+    ("entertainment", "развлечения", false, "боулинг, кино, отдых, музей, экскурсия, аквапарк, зоопарк, москвариум"),
+    ("cafe", "кафе", false, "ресторан, рест, мак, макдональдс, макдак, kfc"),
     ("taxi", "такси", false, "яндекс такси, yandex taxi"),
-    ("phone", "телефон", false, "yota, связь"),
     ("books", "книги", false, "литература, литра, лит-ра"),
-    ("internet", "интернет", false, "инет, inet"),
-    ("subscriptions", "подписки", false, "подписка"),
-    ("other", "прочее", true, "");
+    ("games", "игры", false, "стим, настолки"),
+    ("outfit", "одежда", false, "наряд, платье, костюм, обувь"),
+    ("gift", "подарки", false, ""),
+    ("other", "прочее", false, "");
 
 insert into budget(codename, daily_limit) values ('base', 1600);
