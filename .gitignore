@@ -1,4 +1,4 @@
 .env
 .idea
 tgenv
-db/finance.db
+/db/finance.db
