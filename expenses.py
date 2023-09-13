@@ -55,10 +55,18 @@ def get_today_statistics() -> str:
                    "from category where is_base_expense=true)")
     result = cursor.fetchone()
     base_today_expenses = result[0] if result[0] else 0
+    cursor.execute("select sum(amount) "
+                   "from expense where date(created)=date('now', 'localtime') "
+                   "and category_codename in (select codename "
+                   "from category where is_base_expense=false)")
+    result = cursor.fetchone()
+    minor_expenses = result[0] if result[0] else 0
     return (f"Расходы сегодня:\n"
             f"всего — {all_today_expenses} руб.\n"
+            f"второстепенные — {minor_expenses} руб. \n"
             f"базовые — {base_today_expenses} руб. из {_get_budget_limit()} руб.\n\n"
-            f"За текущий месяц: /month")
+            f"За текущий месяц: /month\n"
+            f"За текущий год: /year")
 
 
 def get_month_statistics() -> str:
@@ -78,8 +86,15 @@ def get_month_statistics() -> str:
                    f"from category where is_base_expense=true)")
     result = cursor.fetchone()
     base_today_expenses = result[0] if result[0] else 0
+    cursor.execute(f"select sum(amount) "
+                   f"from expense where date(created) >= '{first_day_of_month}' "
+                   f"and category_codename in (select codename "
+                   f"from category where is_base_expense=false)")
+    result = cursor.fetchone()
+    minor_expenses = result[0] if result[0] else 0
     return (f"Расходы в текущем месяце:\n"
             f"всего — {all_today_expenses} руб.\n"
+            f"второстепенные — {minor_expenses} руб. \n"
             f"базовые — {base_today_expenses} руб. из "
             f"{now.day * _get_budget_limit()} руб.")
 
@@ -101,8 +116,15 @@ def get_year_statistics() -> str:
                    f"from category where is_base_expense=true)")
     result = cursor.fetchone()
     base_today_expenses = result[0] if result[0] else 0
+    cursor.execute(f"select sum(amount) "
+                   f"from expense where date(created) >= '{first_day_of_year}' "
+                   f"and category_codename in (select codename "
+                   f"from category where is_base_expense=false)")
+    result = cursor.fetchone()
+    minor_expenses = result[0] if result[0] else 0
     return (f"Расходы в текущем году:\n"
             f"всего — {all_today_expenses} руб.\n"
+            f"второстепенные — {minor_expenses} руб. \n"
             f"базовые — {base_today_expenses} руб. из "
             f"{(now.day * _get_budget_limit()) + ((now.month - 1) * 30 * _get_budget_limit())} руб.")
 
