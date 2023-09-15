@@ -49,6 +49,6 @@ def _create_report() -> None:
         df.to_excel(writer, sheet_name='расходы', startrow=0, startcol=0, index=True, header=True)
 
 
-def get_report():
+def get_report() -> FSInputFile:
     _create_report()
     return FSInputFile('report.xlsx', filename='отчет.xlsx')
