@@ -47,6 +47,13 @@ def change_base_expense(value: int) -> None:
     conn.commit()
 
 
+def get_all_categories() -> List:
+    cursor.execute(f"select distinct name from category")
+    categories = cursor.fetchall()
+    categories = [cat[0] for cat in categories]
+    return categories
+
+
 def _init_db():
     """Инициализирует БД"""
     with open("db/createdb.sql", "r") as f:

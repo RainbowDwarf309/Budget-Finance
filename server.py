@@ -3,7 +3,7 @@ import logging
 import sys
 from os import getenv
 from dotenv import load_dotenv
-from aiogram import Bot, Dispatcher, types, Router
+from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
 from aiogram.filters import Command
 import exceptions
@@ -11,6 +11,7 @@ import expenses
 from categories import Categories
 from middlewares import AccessMiddleware
 from aiogram.client.session.aiohttp import AiohttpSession
+from excel import get_report
 
 load_dotenv()
 
@@ -26,7 +27,7 @@ else:
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML, session=session)
 
 
-@dp.message(Command('start', 'help'))
+@dp.message(Command('start', 'help', 'справка', 'помощь'))
 async def send_welcome(message: types.Message):
     """Отправляет приветственное сообщение и помощь по боту"""
     await message.answer(
@@ -34,9 +35,10 @@ async def send_welcome(message: types.Message):
         "Добавить расход: добавить 250 такси\n"
         "Сегодняшняя статистика: /today\n"
         "За текущий месяц: /month\n"
-        "За текущий год: /year\n"
-        "Последние внесённые расходы: /expenses\n"
-        "Категории трат: /categories\n"
+        "За текущий год : /year\n"
+        "Получить отчет в формате эксель: /report, /отчет\n"
+        "Последние внесённые расходы: /expenses, /расходы\n"
+        "Категории трат: /categories, /категории\n"
         "Изменить величину базового расхода: изменить базовый расход 2000")
 
 
@@ -49,7 +51,7 @@ async def del_expense(message: types.Message):
     await message.answer(answer_message)
 
 
-@dp.message(Command('categories'))
+@dp.message(Command('categories', 'категории'))
 async def categories_list(message: types.Message):
     """Отправляет список категорий расходов"""
     categories = Categories().get_all_categories()
@@ -84,7 +86,14 @@ async def year_statistics(message: types.Message):
     await message.answer(answer_message)
 
 
-@dp.message(Command('expenses'))
+@dp.message(Command('report', 'отчет'))
+async def send_report(message: types.Message):
+    """Отправляет эксель файл"""
+    report = get_report()
+    await bot.send_document(chat_id=message.chat.id, document=report, caption='Отчет за прошедшие месяцы')
+
+
+@dp.message(Command('expenses', 'расходы'))
 async def list_expenses(message: types.Message):
     """Отправляет последние несколько записей о расходах"""
     last_expenses = expenses.last_10()
