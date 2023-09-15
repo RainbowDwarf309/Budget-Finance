@@ -34,8 +34,8 @@ def _get_report_data() -> List[Tuple]:
 def _create_report() -> None:
     categories = db.get_all_categories()
     data = _get_report_data()
-    months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь',
-              'Декабрь']
+    months = [month[2] for month in data]
+    months = list(dict.fromkeys(months))
     month_dict = {f'{month}': None for month in months}
     report_dict = {str(cat): {} for cat in categories}
     for cat in categories:
