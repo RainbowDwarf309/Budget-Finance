@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import sys
-from os import getenv
+from os import getenv, remove
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
@@ -91,6 +91,7 @@ async def send_report(message: types.Message):
     """Отправляет эксель файл"""
     report = get_report()
     await bot.send_document(chat_id=message.chat.id, document=report, caption='Отчет за прошедшие месяцы')
+    remove('report.xlsx')
 
 
 @dp.message(Command('expenses', 'расходы'))
