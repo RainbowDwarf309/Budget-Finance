@@ -39,7 +39,8 @@ async def send_welcome(message: types.Message):
         "Получить отчет в формате эксель: /report, /отчет\n"
         "Последние внесённые расходы: /expenses, /расходы\n"
         "Категории трат: /categories, /категории\n"
-        "Изменить величину базового расхода: изменить базовый расход 2000")
+        "Изменить величину базового расхода: изменить базовый расход 2000\n"
+        "Изменить величину расхода на квартиру: изменить расход на квартиру 45000")
 
 
 @dp.message(lambda message: message.text.startswith('/del'))
@@ -132,6 +133,17 @@ async def change_base(message: types.Message):
     """Изменяет базовый расход"""
     try:
         answer_message = expenses.change_base(int(message.text[23:]))
+    except exceptions.NotCorrectMessage as e:
+        await message.answer(str(e))
+        return
+    await message.answer(answer_message)
+
+
+@dp.message(lambda message: message.text.startswith(('изменить расход на квартиру')))
+async def change_apartment(message: types.Message):
+    """Изменяет базовый расход на квартиру"""
+    try:
+        answer_message = expenses.change_apartment_base(int(message.text[28:]))
     except exceptions.NotCorrectMessage as e:
         await message.answer(str(e))
         return
