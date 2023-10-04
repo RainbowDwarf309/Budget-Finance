@@ -41,4 +41,4 @@ values
     ("gift", "подарки", false, ""),
     ("other", "прочее", false, "");
 
-insert into budget(codename, daily_limit) values ('base', 1600);
+insert into budget(codename, daily_limit) values ('base', 1600), ('apartment', 45000);
