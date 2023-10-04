@@ -42,6 +42,8 @@ def add_expense(raw_message: str) -> Expense:
 
 def get_today_statistics() -> str:
     """Возвращает строкой статистику расходов за сегодня"""
+    now = _get_now_datetime()
+    first_day_of_month = f'{now.year:04d}-{now.month:02d}-01'
     cursor = db.get_cursor()
     cursor.execute("select sum(amount)"
                    "from expense where date(created)=date('now', 'localtime')")
@@ -49,20 +51,14 @@ def get_today_statistics() -> str:
     if not result[0]:
         return "Сегодня ещё нет расходов"
     all_today_expenses = result[0]
-    cursor.execute("select sum(amount) "
-                   "from expense where date(created)=date('now', 'localtime') "
-                   "and category_codename in (select codename "
-                   "from category where is_base_expense=true)")
-    result = cursor.fetchone()
+    result = _get_summary_amount_today_expenses(True)
     base_today_expenses = result[0] if result[0] else 0
-    cursor.execute("select sum(amount) "
-                   "from expense where date(created)=date('now', 'localtime') "
-                   "and category_codename in (select codename "
-                   "from category where is_base_expense=false)")
-    result = cursor.fetchone()
+    result = _get_summary_amount_today_expenses(False)
     minor_expenses = result[0] if result[0] else 0
+    apartment_expenses = _get_apartment_expenses(first_day_of_month)
     return (f"Расходы сегодня:\n"
             f"всего — {all_today_expenses} руб.\n"
+            f"квартира — {apartment_expenses} руб. из {_get_apartment_limit()} руб.\n"
             f"второстепенные — {minor_expenses} руб. \n"
             f"базовые — {base_today_expenses} руб. из {_get_budget_limit()} руб.\n\n"
             f"За текущий месяц: /month\n"
@@ -80,23 +76,17 @@ def get_month_statistics() -> str:
     if not result[0]:
         return "В этом месяце ещё нет расходов"
     all_today_expenses = result[0]
-    cursor.execute(f"select sum(amount) "
-                   f"from expense where date(created) >= '{first_day_of_month}' "
-                   f"and category_codename in (select codename "
-                   f"from category where is_base_expense=true)")
-    result = cursor.fetchone()
+    result = _get_summary_amount_expenses(first_day_of_month, True)
     base_today_expenses = result[0] if result[0] else 0
-    cursor.execute(f"select sum(amount) "
-                   f"from expense where date(created) >= '{first_day_of_month}' "
-                   f"and category_codename in (select codename "
-                   f"from category where is_base_expense=false)")
-    result = cursor.fetchone()
+    result = _get_summary_amount_expenses(first_day_of_month, False)
     minor_expenses = result[0] if result[0] else 0
+    apartment_expenses = _get_apartment_expenses(first_day_of_month)
     return (f"Расходы в текущем месяце:\n"
             f"всего — {all_today_expenses} руб.\n"
+            f"квартира — {apartment_expenses} руб. из {_get_apartment_limit()} руб.\n"
             f"второстепенные — {minor_expenses} руб. \n"
             f"базовые — {base_today_expenses} руб. из "
-            f"{now.day * _get_budget_limit()} руб.")
+            f"{now.day * _get_budget_limit() + _get_apartment_limit()} руб.")
 
 
 def get_year_statistics() -> str:
@@ -110,31 +100,34 @@ def get_year_statistics() -> str:
     if not result[0]:
         return "В этом году ещё нет расходов"
     all_today_expenses = result[0]
-    cursor.execute(f"select sum(amount) "
-                   f"from expense where date(created) >= '{first_day_of_year}' "
-                   f"and category_codename in (select codename "
-                   f"from category where is_base_expense=true)")
-    result = cursor.fetchone()
-    base_today_expenses = result[0] if result[0] else 0
-    cursor.execute(f"select sum(amount) "
-                   f"from expense where date(created) >= '{first_day_of_year}' "
-                   f"and category_codename in (select codename "
-                   f"from category where is_base_expense=false)")
-    result = cursor.fetchone()
-    minor_expenses = result[0] if result[0] else 0
+    result = _get_summary_amount_expenses(first_day_of_year, True)
+    base_year_expenses = result[0] if result[0] else 0
+    result = _get_summary_amount_expenses(first_day_of_year, False)
+    minor_year_expenses = result[0] if result[0] else 0
+    apartment_expenses = _get_apartment_expenses(first_day_of_year)
     return (f"Расходы в текущем году:\n"
             f"всего — {all_today_expenses} руб.\n"
-            f"второстепенные — {minor_expenses} руб. \n"
-            f"базовые — {base_today_expenses} руб. из "
-            f"{(now.day * _get_budget_limit()) + ((now.month - 1) * 30 * _get_budget_limit())} руб.")
+            f"квартира — {apartment_expenses} руб. из {_get_apartment_limit() * now.month} руб.\n"
+            f"второстепенные — {minor_year_expenses} руб. \n"
+            f"базовые — {base_year_expenses} руб. из "
+            f'''{(now.day * _get_budget_limit()) + ((now.month - 1) * 30 * _get_budget_limit())
+                 + (_get_apartment_limit() * now.month)} руб.''')
 
 
 def change_base(value: int):
     db.change_base_expense(value)
     cursor = db.get_cursor()
-    cursor.execute("select daily_limit from budget")
+    cursor.execute("select daily_limit from budget where codename='base'")
     base = cursor.fetchone()
     return (f"Базовый расход изменен и составляет {base[0]} руб.")
+
+
+def change_apartment_base(value: int):
+    db.change_apartment_expense(value)
+    cursor = db.get_cursor()
+    cursor.execute("select daily_limit from budget where codename='apartment'")
+    base = cursor.fetchone()
+    return (f"Расход на квартиру изменен и составляет {base[0]} руб.")
 
 
 def last_10() -> List[Expense]:
@@ -197,3 +190,37 @@ def _get_now_datetime() -> datetime.datetime:
 def _get_budget_limit() -> int:
     """Возвращает дневной лимит трат для основных базовых трат"""
     return db.fetchall("budget", ["daily_limit"])[0]["daily_limit"]
+
+
+def _get_apartment_limit() -> int:
+    """Возвращает лимит трат для трат на квартиру"""
+    return db.fetchall("budget", ["daily_limit"])[1]["daily_limit"]
+
+
+def _get_apartment_expenses(date: datetime) -> int:
+    cursor = db.get_cursor()
+    cursor.execute(f"select sum(amount) "
+                   f"from expense where date(created) >= '{date}' "
+                   f"and category_codename = 'apartment'")
+    apartment = cursor.fetchone()
+    return apartment[0] if apartment[0] else 0
+
+
+def _get_summary_amount_expenses(date: datetime, is_base: bool) -> tuple:
+    cursor = db.get_cursor()
+    cursor.execute(f"select sum(amount) "
+                   f"from expense where date(created) >= '{date}' "
+                   f"and category_codename in (select codename "
+                   f"from category where is_base_expense={is_base})")
+    summary_amount = cursor.fetchone()
+    return summary_amount
+
+
+def _get_summary_amount_today_expenses(is_base: bool) -> tuple:
+    cursor = db.get_cursor()
+    cursor.execute("select sum(amount) "
+                   "from expense where date(created)=date('now', 'localtime') "
+                   "and category_codename in (select codename "
+                   f"from category where is_base_expense={is_base})")
+    summary_amount = cursor.fetchone()
+    return summary_amount
