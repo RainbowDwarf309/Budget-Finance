@@ -47,6 +47,11 @@ def change_base_expense(value: int) -> None:
     conn.commit()
 
 
+def change_apartment_expense(value: int) -> None:
+    cursor.execute(f"update budget set daily_limit={value} where codename='apartment'")
+    conn.commit()
+
+
 def get_all_categories() -> List:
     cursor.execute(f"select distinct name from category")
     categories = cursor.fetchall()
